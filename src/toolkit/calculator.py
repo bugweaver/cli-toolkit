@@ -1,6 +1,15 @@
 from .constants import OPERATORS
 
 
+def _parse_number(number: str) -> float:
+    try:
+        return float(number)
+    except ValueError:
+        if number in "+-":
+            raise ValueError("Missing operand")
+        raise ValueError(f"Invalid number: {number}")
+
+
 def tokenize(expression: str) -> list[float | str]:
     tokens: list[float | str] = []
     number = ""
@@ -8,18 +17,26 @@ def tokenize(expression: str) -> list[float | str]:
     for char in expression:
         if char.isspace():
             continue
+
+        unary = (
+            char in "+-" and not number and (not tokens or isinstance(tokens[-1], str))
+        )
+        if unary:
+            number = char
+            continue
+
         if char.isdigit() or char == ".":
             number += char
         elif char in OPERATORS:
             if number:
-                tokens.append(float(number))
+                tokens.append(_parse_number(number))
                 number = ""
             tokens.append(char)
         else:
             raise ValueError(f"Invalid symbol: {char}")
 
     if number:
-        tokens.append(float(number))
+        tokens.append(_parse_number(number))
 
     return tokens
 
@@ -31,6 +48,9 @@ def _is_operator(token: float | str) -> bool:
 def validate(tokens: list[float | str]) -> None:
     if not tokens:
         raise ValueError("Empty expression")
+
+    if _is_operator(tokens[0]):
+        raise ValueError("Missing operand")
 
     if _is_operator(tokens[-1]):
         raise ValueError("Missing operand")
@@ -87,4 +107,5 @@ def calculate(tokens: list[float | str]) -> float:
 
 def evaluate(expression: str) -> float:
     tokens = tokenize(expression)
+    validate(tokens)
     return calculate(tokens)
