@@ -1,4 +1,4 @@
-from src.constants import OPERATORS
+from .constants import OPERATORS
 
 
 def tokenize(expression: str) -> list[float | str]:
