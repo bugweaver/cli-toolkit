@@ -5,4 +5,12 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "pytest>=8.4.2",
+    "typer[standard]>=0.27.2",
 ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
