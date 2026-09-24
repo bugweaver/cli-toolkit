@@ -1,17 +1,24 @@
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, localcontext
+
 from .constants import OPERATORS
 
+PRECISION = 28
+ROUNDING = ROUND_HALF_UP
 
-def _parse_number(number: str) -> float:
+Token = Decimal | str
+
+
+def _parse_number(number: str) -> Decimal:
+    if number in "+-":
+        raise ValueError("Missing operand")
     try:
-        return float(number)
-    except ValueError:
-        if number in "+-":
-            raise ValueError("Missing operand")
+        return Decimal(number)
+    except InvalidOperation:
         raise ValueError(f"Invalid number: {number}")
 
 
-def tokenize(expression: str) -> list[float | str]:
-    tokens: list[float | str] = []
+def tokenize(expression: str) -> list[Token]:
+    tokens: list[Token] = []
     number = ""
 
     for char in expression:
@@ -41,11 +48,11 @@ def tokenize(expression: str) -> list[float | str]:
     return tokens
 
 
-def _is_operator(token: float | str) -> bool:
+def _is_operator(token: Token) -> bool:
     return isinstance(token, str) and token in OPERATORS
 
 
-def validate(tokens: list[float | str]) -> None:
+def validate(tokens: list[Token]) -> None:
     if not tokens:
         raise ValueError("Empty expression")
 
@@ -60,52 +67,56 @@ def validate(tokens: list[float | str]) -> None:
             raise ValueError("Two operators in a row")
 
 
-def _number(token: float | str) -> float:
-    if isinstance(token, float):
+def _number(token: Token) -> Decimal:
+    if isinstance(token, Decimal):
         return token
     raise TypeError(f"Expected a number, got {token!r}")
 
 
-def calculate(tokens: list[float | str]) -> float:
-    new_tokens: list[float | str] = [_number(tokens[0])]
+def calculate(tokens: list[Token]) -> Decimal:
+    with localcontext() as context:
+        context.prec = PRECISION
+        context.rounding = ROUNDING
 
-    i = 1
-    while i < len(tokens):
-        operator = tokens[i]
-        number = _number(tokens[i + 1])
+        new_tokens: list[Token] = [_number(tokens[0])]
 
-        if operator == "*":
-            new_tokens[-1] = _number(new_tokens[-1]) * number
+        i = 1
+        while i < len(tokens):
+            operator = tokens[i]
+            number = _number(tokens[i + 1])
 
-        elif operator == "/":
-            if number == 0:
-                raise ZeroDivisionError("Division by zero")
-            new_tokens[-1] = _number(new_tokens[-1]) / number
+            if operator == "*":
+                new_tokens[-1] = _number(new_tokens[-1]) * number
 
-        else:
-            new_tokens.append(operator)
-            new_tokens.append(number)
+            elif operator == "/":
+                if number == 0:
+                    raise ZeroDivisionError("Division by zero")
+                new_tokens[-1] = _number(new_tokens[-1]) / number
 
-        i += 2
+            else:
+                new_tokens.append(operator)
+                new_tokens.append(number)
 
-    result = _number(new_tokens[0])
+            i += 2
 
-    i = 1
-    while i < len(new_tokens):
-        operator = new_tokens[i]
-        number = _number(new_tokens[i + 1])
+        result = _number(new_tokens[0])
 
-        if operator == "+":
-            result += number
-        elif operator == "-":
-            result -= number
+        i = 1
+        while i < len(new_tokens):
+            operator = new_tokens[i]
+            number = _number(new_tokens[i + 1])
 
-        i += 2
+            if operator == "+":
+                result += number
+            elif operator == "-":
+                result -= number
 
-    return result
+            i += 2
+
+        return result
 
 
-def evaluate(expression: str) -> float:
+def evaluate(expression: str) -> Decimal:
     tokens = tokenize(expression)
     validate(tokens)
     return calculate(tokens)
