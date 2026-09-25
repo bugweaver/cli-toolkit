@@ -120,15 +120,19 @@ name = "toolkit"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "pytest" },
     { name = "typer" },
 ]
 
-[package.metadata]
-requires-dist = [
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "typer", specifier = ">=0.27.2" },
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
 ]
+
+[package.metadata]
+requires-dist = [{ name = "typer", specifier = ">=0.27.2" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.4.2" }]
 
 [[package]]
 name = "typer"
