@@ -2,6 +2,7 @@ import typer
 
 from .calculator import evaluate
 from .converter import convert_units
+from .errors import ToolkitError
 
 app = typer.Typer(
     help="Calculate expressions and convert units.",
@@ -22,7 +23,7 @@ def calc(
     \u200b"""
     try:
         result = evaluate(expression)
-    except (ValueError, ZeroDivisionError) as error:
+    except ToolkitError as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(code=2)
     typer.echo(result)
@@ -43,7 +44,7 @@ def convert(
     """
     try:
         result = convert_units(value, from_unit, to_unit)
-    except ValueError as error:
+    except ToolkitError as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(code=2)
     typer.echo(result)
