@@ -30,7 +30,7 @@ python -m toolkit --help
 python -m toolkit calc "0.1 + 0.2"
 ```
 ```shell
-pyton -m tookit convert 1000 --from m to km
+python -m tookit convert 1000 --from m to km
 ```
 
 Тесты:
@@ -67,10 +67,10 @@ python -m toolkit calc "-2 * -3"
 Регистр единиц не важен. Параметры `--from` и  `--to` обязательны.
 
 ```shell
-python -m convert 2.5 --from kg --to g
+python -m toolkit convert 2.5 --from kg --to g
 ```
 ```shell
-python -m convert 0 --from c --to f
+python -m toolkit convert 0 --from c --to f
 ```
 
 ## Решения, принатые при разработке
