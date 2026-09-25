@@ -29,7 +29,6 @@ class TestConvertUnits:
     def test_convert_units(
         self, value: float, from_unit: str, to_unit: str, expected: float
     ):
-        # может использовать math.isclose?
         assert convert_units(value, from_unit, to_unit) == pytest.approx(expected)  # pyright: ignore
 
     def test_ignores_unit_case(self):
