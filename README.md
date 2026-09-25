@@ -30,7 +30,7 @@ python -m toolkit --help
 python -m toolkit calc "0.1 + 0.2"
 ```
 ```shell
-python -m tookit convert 1000 --from m to km
+python -m tookit convert 1000 --from m --to km
 ```
 
 Тесты:
