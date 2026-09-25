@@ -1,6 +1,15 @@
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation, localcontext
 
 from .constants import OPERATORS
+from .errors import (
+    DivisionByZeroError,
+    EmptyExpressionError,
+    InvalidNumberError,
+    InvalidSymbolError,
+    MissingOperandError,
+    OperatorsInARowError,
+    UnexpectedNumberError,
+)
 
 PRECISION = 28
 ROUNDING = ROUND_HALF_UP
@@ -10,11 +19,11 @@ Token = Decimal | str
 
 def _parse_number(number: str) -> Decimal:
     if number in "+-":
-        raise ValueError("Missing operand")
+        raise MissingOperandError()
     try:
         return Decimal(number)
     except InvalidOperation:
-        raise ValueError(f"Invalid number: {number}")
+        raise InvalidNumberError(number)
 
 
 def tokenize(expression: str) -> list[Token]:
@@ -23,6 +32,9 @@ def tokenize(expression: str) -> list[Token]:
 
     for char in expression:
         if char.isspace():
+            if number not in ("", "+", "-"):
+                tokens.append(_parse_number(number))
+                number = ""
             continue
 
         unary = (
@@ -32,6 +44,14 @@ def tokenize(expression: str) -> list[Token]:
             number = char
             continue
 
+        if (
+            (char.isdigit() or char == ".")
+            and not number
+            and tokens
+            and isinstance(tokens[-1], Decimal)
+        ):
+            raise UnexpectedNumberError()
+
         if char.isdigit() or char == ".":
             number += char
         elif char in OPERATORS:
@@ -40,7 +60,7 @@ def tokenize(expression: str) -> list[Token]:
                 number = ""
             tokens.append(char)
         else:
-            raise ValueError(f"Invalid symbol: {char}")
+            raise InvalidSymbolError(char)
 
     if number:
         tokens.append(_parse_number(number))
@@ -54,17 +74,17 @@ def _is_operator(token: Token) -> bool:
 
 def validate(tokens: list[Token]) -> None:
     if not tokens:
-        raise ValueError("Empty expression")
+        raise EmptyExpressionError()
 
     if _is_operator(tokens[0]):
-        raise ValueError("Missing operand")
+        raise MissingOperandError()
 
     if _is_operator(tokens[-1]):
-        raise ValueError("Missing operand")
+        raise MissingOperandError()
 
     for i in range(len(tokens) - 1):
         if _is_operator(tokens[i]) and _is_operator(tokens[i + 1]):
-            raise ValueError("Two operators in a row")
+            raise OperatorsInARowError()
 
 
 def _number(token: Token) -> Decimal:
@@ -90,7 +110,7 @@ def calculate(tokens: list[Token]) -> Decimal:
 
             elif operator == "/":
                 if number == 0:
-                    raise ZeroDivisionError("Division by zero")
+                    raise DivisionByZeroError()
                 new_tokens[-1] = _number(new_tokens[-1]) / number
 
             else:

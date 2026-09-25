@@ -1,6 +1,11 @@
 import pytest
 
 from toolkit.converter import convert_units
+from toolkit.errors import (
+    IncompatibleUnitsError,
+    TemperatureBelowAbsoluteZeroError,
+    UnknownUnitError,
+)
 
 
 class TestConvertUnits:
@@ -31,11 +36,11 @@ class TestConvertUnits:
         assert convert_units(1, "KM", "M") == 1000.0
 
     def test_rejects_unknown_unit(self):
-        with pytest.raises(ValueError, match="Unknown unit"):
+        with pytest.raises(UnknownUnitError):
             convert_units(1, "unknown", "m")
 
     def test_rejects_incompatible_units(self):
-        with pytest.raises(ValueError, match="Incompatible units"):
+        with pytest.raises(IncompatibleUnitsError):
             convert_units(1, "m", "kg")
 
     @pytest.mark.parametrize(
@@ -51,7 +56,7 @@ class TestConvertUnits:
         value: float,
         unit: str,
     ):
-        with pytest.raises(ValueError, match="Temperature below absolute zero"):
+        with pytest.raises(TemperatureBelowAbsoluteZeroError):
             convert_units(value, unit, "k")
 
     def test_allows_absolute_zero(self):

@@ -3,6 +3,15 @@ from decimal import Decimal
 import pytest
 
 from toolkit.calculator import calculate, evaluate, tokenize, validate
+from toolkit.errors import (
+    DivisionByZeroError,
+    EmptyExpressionError,
+    InvalidNumberError,
+    InvalidSymbolError,
+    MissingOperandError,
+    OperatorsInARowError,
+    UnexpectedNumberError,
+)
 
 Token = Decimal | str
 
@@ -21,22 +30,33 @@ class TestTokenize:
         assert tokenize(expression) == expected
 
     @pytest.mark.parametrize(
-        "expression",
+        ("expression", "error"),
         [
-            "2+a",
-            "2#3",
-            ".",
-            "1.2.3",
+            ("2+a", InvalidSymbolError),
+            ("2#3", InvalidSymbolError),
+            (".", InvalidNumberError),
+            ("1.2.3", InvalidNumberError),
         ],
     )
-    def test_invalid_number_or_symbol(self, expression: str):
-        with pytest.raises(ValueError):
+    def test_invalid_number_or_symbol(self, expression: str, error: type[Exception]):
+        with pytest.raises(error):
             tokenize(expression)
 
+    @pytest.mark.parametrize(
+        ("expression"),
+        [
+            ("2  3 + 1"),
+            ("2 3*5"),
+            ("2 . 5 * 1"),
+        ]
+    )
+    def test_unexpected_number(self, expression: str):
+        with pytest.raises(UnexpectedNumberError):
+            tokenize(expression)
 
 class TestValidate:
     def test_empty_expression(self):
-        with pytest.raises(ValueError, match="Empty expression"):
+        with pytest.raises(EmptyExpressionError):
             validate([])
 
     @pytest.mark.parametrize(
@@ -47,7 +67,7 @@ class TestValidate:
         ],
     )
     def test_missing_operand(self, tokens: list[Token]):
-        with pytest.raises(ValueError, match="Missing operand"):
+        with pytest.raises(MissingOperandError):
             validate(tokens)
 
     @pytest.mark.parametrize(
@@ -58,7 +78,7 @@ class TestValidate:
         ],
     )
     def test_two_operators(self, tokens: list[Token]):
-        with pytest.raises(ValueError, match="Two operators in a row"):
+        with pytest.raises(OperatorsInARowError):
             validate(tokens)
 
 
@@ -77,7 +97,7 @@ class TestCalculate:
         assert calculate(tokens) == expected
 
     def test_division_by_zero(self):
-        with pytest.raises(ZeroDivisionError, match="Division by zero"):
+        with pytest.raises(DivisionByZeroError):
             calculate([Decimal("10.0"), "/", Decimal("0.0")])
 
 
@@ -113,20 +133,20 @@ class TestEvaluate:
         assert evaluate(expression) == expected
 
     @pytest.mark.parametrize(
-        "expression",
+        ("expression", "error"),
         [
-            "",
-            " ",
-            "2+",
-            "*2",
-            "2+*3",
-            "hello",
+            ("", EmptyExpressionError),
+            (" ", EmptyExpressionError),
+            ("2+", MissingOperandError),
+            ("*2", MissingOperandError),
+            ("2+*3", OperatorsInARowError),
+            ("hello", InvalidSymbolError),
         ],
     )
-    def test_invalid_expression(self, expression: str):
-        with pytest.raises(ValueError):
+    def test_invalid_expression(self, expression: str, error: type[Exception]):
+        with pytest.raises(error):
             evaluate(expression)
 
     def test_division_by_zero(self):
-        with pytest.raises(ZeroDivisionError, match="Division by zero"):
+        with pytest.raises(DivisionByZeroError):
             evaluate("10/0")

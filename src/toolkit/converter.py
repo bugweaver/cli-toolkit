@@ -1,4 +1,9 @@
 from .constants import LENGTH_TO_METERS, MASS_TO_GRAMS, TEMPERATURE_UNITS
+from .errors import (
+    IncompatibleUnitsError,
+    TemperatureBelowAbsoluteZeroError,
+    UnknownUnitError,
+)
 
 
 def _to_kelvin(value: float, unit: str) -> float:
@@ -27,7 +32,7 @@ def _group(unit: str) -> str:
         return "mass"
     if unit in TEMPERATURE_UNITS:
         return "temperature"
-    raise ValueError(f"Unknown unit: {unit}")
+    raise UnknownUnitError(unit)
 
 
 def convert_units(value: float, from_unit: str, to_unit: str) -> float:
@@ -37,7 +42,7 @@ def convert_units(value: float, from_unit: str, to_unit: str) -> float:
     target_group = _group(target)
 
     if source_group != target_group:
-        raise ValueError(f"Incompatible units: {source} and {target}")
+        raise IncompatibleUnitsError(source, target)
 
     if source_group == "length":
         meters = value * LENGTH_TO_METERS[source]
@@ -49,6 +54,6 @@ def convert_units(value: float, from_unit: str, to_unit: str) -> float:
 
     kelvin = _to_kelvin(value, source)
     if kelvin < 0:
-        raise ValueError("Temperature below absolute zero")
+        raise TemperatureBelowAbsoluteZeroError()
 
     return _from_kelvin(kelvin, target)
