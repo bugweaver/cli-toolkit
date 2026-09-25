@@ -33,8 +33,11 @@ def tokenize(expression: str) -> list[Token]:
     for char in expression:
         if char.isspace():
             if number not in ("", "+", "-"):
-                tokens.append(_parse_number(number))
-                number = ""
+                if any(digit.isdigit() for digit in number):
+                    tokens.append(_parse_number(number))
+                    number = ""
+                else:
+                    raise UnexpectedNumberError()
             continue
 
         unary = (
@@ -85,6 +88,8 @@ def validate(tokens: list[Token]) -> None:
     for i in range(len(tokens) - 1):
         if _is_operator(tokens[i]) and _is_operator(tokens[i + 1]):
             raise OperatorsInARowError()
+        if isinstance(tokens[i], Decimal) and isinstance(tokens[i + 1], Decimal):
+            raise UnexpectedNumberError()
 
 
 def _number(token: Token) -> Decimal:
@@ -94,6 +99,7 @@ def _number(token: Token) -> Decimal:
 
 
 def calculate(tokens: list[Token]) -> Decimal:
+    validate(tokens)
     with localcontext() as context:
         context.prec = PRECISION
         context.rounding = ROUNDING

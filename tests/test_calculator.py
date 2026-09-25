@@ -44,15 +44,12 @@ class TestTokenize:
 
     @pytest.mark.parametrize(
         ("expression"),
-        [
-            ("2  3 + 1"),
-            ("2 3*5"),
-            ("2 . 5 * 1"),
-        ]
+        [("2  3 + 1"), ("2 3*5"), ("2 . 5 * 1"), (". 5"), ("+. 5"), ("-. 5")],
     )
     def test_unexpected_number(self, expression: str):
         with pytest.raises(UnexpectedNumberError):
             tokenize(expression)
+
 
 class TestValidate:
     def test_empty_expression(self):
@@ -79,6 +76,17 @@ class TestValidate:
     )
     def test_two_operators(self, tokens: list[Token]):
         with pytest.raises(OperatorsInARowError):
+            validate(tokens)
+
+    @pytest.mark.parametrize(
+        "tokens",
+        [
+            [Decimal("2.0"), Decimal("3.0")],
+            [Decimal("2.0"), "+", Decimal("3.0"), Decimal("4.0")],
+        ],
+    )
+    def test_two_numbers(self, tokens: list[Token]):
+        with pytest.raises(UnexpectedNumberError):
             validate(tokens)
 
 
