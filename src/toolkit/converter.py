@@ -7,6 +7,7 @@ from .errors import (
 
 
 def _to_kelvin(value: float, unit: str) -> float:
+    """Convert a temperature to kelvin."""
     if unit == "c":
         return value + 273.15
     if unit == "f":
@@ -16,6 +17,7 @@ def _to_kelvin(value: float, unit: str) -> float:
 
 
 def _from_kelvin(value: float, unit: str) -> float:
+    """Convert a kelvin value to the given unit."""
     if unit == "c":
         return value - 273.15
 
@@ -26,6 +28,7 @@ def _from_kelvin(value: float, unit: str) -> float:
 
 
 def _group(unit: str) -> str:
+    """Return the group that contains the unit."""
     if unit in LENGTH_TO_METERS:
         return "length"
     if unit in MASS_TO_GRAMS:
@@ -36,6 +39,7 @@ def _group(unit: str) -> str:
 
 
 def convert_units(value: float, from_unit: str, to_unit: str) -> float:
+    """Convert a value between units of the same group."""
     source = from_unit.lower()
     target = to_unit.lower()
     source_group = _group(source)

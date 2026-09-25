@@ -18,6 +18,7 @@ Token = Decimal | str
 
 
 def _parse_number(number: str) -> Decimal:
+    """Parse a number string into a Decimal."""
     if number in "+-":
         raise MissingOperandError()
     try:
@@ -27,6 +28,7 @@ def _parse_number(number: str) -> Decimal:
 
 
 def tokenize(expression: str) -> list[Token]:
+    """Split an expression into numbers and operators."""
     tokens: list[Token] = []
     number = ""
 
@@ -72,10 +74,12 @@ def tokenize(expression: str) -> list[Token]:
 
 
 def _is_operator(token: Token) -> bool:
+    """Return whether a token is an arithmetic operator."""
     return isinstance(token, str) and token in OPERATORS
 
 
 def validate(tokens: list[Token]) -> None:
+    """Reject a token list that is not a valid expression."""
     if not tokens:
         raise EmptyExpressionError()
 
@@ -93,12 +97,14 @@ def validate(tokens: list[Token]) -> None:
 
 
 def _number(token: Token) -> Decimal:
+    """Return the token when it is a Decimal."""
     if isinstance(token, Decimal):
         return token
     raise TypeError(f"Expected a number, got {token!r}")
 
 
 def calculate(tokens: list[Token]) -> Decimal:
+    """Calculate the value of a token list."""
     validate(tokens)
     with localcontext() as context:
         context.prec = PRECISION
@@ -143,6 +149,7 @@ def calculate(tokens: list[Token]) -> Decimal:
 
 
 def evaluate(expression: str) -> Decimal:
+    """Evaluate an arithmetic expression."""
     tokens = tokenize(expression)
     validate(tokens)
     return calculate(tokens)
