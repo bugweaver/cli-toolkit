@@ -105,7 +105,6 @@ def _number(token: Token) -> Decimal:
 
 def calculate(tokens: list[Token]) -> Decimal:
     """Calculate the value of a token list."""
-    validate(tokens)
     with localcontext() as context:
         context.prec = PRECISION
         context.rounding = ROUNDING
